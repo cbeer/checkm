@@ -1,6 +1,6 @@
 = checkm
 
-Description goes here.
+Ruby implementation of Checkm, a general-purpose text-based file manifest format.
 
 == Contributing to checkm
  
