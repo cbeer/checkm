@@ -1,4 +1,27 @@
+require 'time'
+
 module Checkm
+  CHUNK_SIZE = 8*1024*1024
+  def self.checksum file, alg
+      digest_alg = case alg
+        when nil
+          return true
+        when /md5/
+           Digest::MD5.new if alg == 'md5'
+        when /sha1/
+        when /sha256/
+        when /dir/
+          return File.directory? file
+        else 
+          return false      
+      end
+
+      while not file.eof? and chunk = file.readpartial(CHUNK_SIZE)
+        digest_alg << chunk
+      end
+      digest_alg.hexdigest
+  end
+
   class Manifest
     def self.parse str, args = {}
       Manifest.new str, args
@@ -10,6 +33,7 @@ module Checkm
     attr_reader :path
 
     def initialize checkm, args = {}
+      @args = args
       @version = nil
       @checkm = checkm
       @lines = checkm.split "\n"
@@ -20,6 +44,26 @@ module Checkm
       @path ||= Dir.pwd
       parse_lines 
       # xxx error on empty entries?
+      @lines.unshift('#%checkm_0.7') and @version = '0.7' if @version.nil?
+
+    end
+
+    def valid?
+      @entries.map { |e| e.valid? }.any? { |b| b == false }
+    end
+
+    def add path, args = {}
+      line = Checkm::Entry.create path, args
+
+      Checkm::Manifest.new [@lines, line].flatten.join("\n"), args
+    end
+
+    def remove path
+      Checkm::Manifest.new @lines.reject { |x| x =~ /^@?#{path}/ }.join("\n"), args
+    end
+
+    def to_s
+      @lines.join("\n")
     end
 
     private
@@ -67,16 +111,19 @@ module Checkm
       @entries << Entry.new(line, self)
     end
 
-    def valid?
-      @entries.map { |e| e.valid? }.any? { |b| b == false }
-    end
-
   end
 
   class Entry
-    CHUNK_SIZE = 8*1024*1024
     BASE_FIELDS = ['sourcefileorurl', 'alg', 'digest', 'length', 'modtime', 'targetfileorurl']
     attr_reader :values
+
+    def self.create path, args = {}
+      base = args[:base] || Dir.pwd
+      alg = args[:alg] || 'md5'
+      file = File.new File.join(base, path)
+
+      "%s | %s | %s | %s | %s | %s" % [path, alg, Checkm.checksum(file, alg), File.size(file.path), file.mtime.utc.xmlschema, nil]
+    end
 
     def initialize line, manifest = nil
       @line = line.strip
@@ -109,25 +156,10 @@ module Checkm
 
     def valid_checksum?
       file = File.new source
-      digest_alg = case alg
-        when nil
-          return true
-        when /md5/
-           Digest::MD5.new if alg == 'md5'
-        when /sha1/
-        when /sha256/
-        when /dir/
-          return File.directory? file
-        else 
-          return false      
-      end
-
-      while not file.eof? and chunk = file.readpartial(CHUNK_SIZE)
-        digest_alg << chunk
-      end
-
-      return digest_alg.hexdigest == digest
+      checksum = Checkm.checksum(file, alg) 
+      checksum === true or checksum == digest
     end
+
 
     def valid_length?
       throw NotImplementedError

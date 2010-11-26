@@ -80,4 +80,31 @@ class TestCheckm < Test::Unit::TestCase
     assert_equal(res.entries.length, 1)
     assert_equal(res.entries.first.valid?, false)
   end
+
+  def test_create_entry
+    res = Checkm::Entry.create('LICENSE.txt')
+    assert_match( /LICENSE\.txt | md5 | 927368f89ca84dbec878a8d017f06443 | 1054 | \d{4}/, res)
+  end
+
+  def test_manifest_add
+    m = Checkm::Manifest.parse('')
+    n = m.add('LICENSE.txt')
+    assert_equal(n.entries.length, 1)
+    assert_equal(n.entries.first.valid?, true)
+  end
+
+  def test_manifest_add
+    m = Checkm::Manifest.parse('')
+    n = m.add('LICENSE.txt')
+    assert_equal(n.entries.length, 1)
+    assert_equal(n.entries.first.valid?, true)
+  end
+
+  def test_manifest_to_s
+    m = Checkm::Manifest.parse('')
+    n = m.add('LICENSE.txt')
+    lines = n.to_s.split "\n"
+    assert_equal(lines[0], '#%checkm_0.7')
+    assert_match(/^LICENSE\.txt/, lines[1])
+  end
 end
