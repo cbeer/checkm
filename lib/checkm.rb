@@ -50,7 +50,7 @@ module Checkm
 
     def valid?
       return true if @entries.empty?
-      @entries.map { |e| e.valid? }.any? { |b| b == false }
+      not @entries.map { |e| e.valid? }.any? { |b| b == false }
     end
 
     def add path, args = {}
