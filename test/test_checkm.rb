@@ -5,6 +5,7 @@ class TestCheckm < Test::Unit::TestCase
     checkm = ''
     res = Checkm::Manifest.parse(checkm)
     assert_equal(res.entries.empty?, true)
+    assert_equal(res.valid?, true)
   end
 
   def test_comment
