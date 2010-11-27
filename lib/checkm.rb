@@ -49,6 +49,7 @@ module Checkm
     end
 
     def valid?
+      return true if @entries.empty?
       @entries.map { |e| e.valid? }.any? { |b| b == false }
     end
 
