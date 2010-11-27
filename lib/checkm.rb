@@ -67,6 +67,10 @@ module Checkm
       @lines.join("\n")
     end
 
+    def to_hash
+      Hash[*@entries.map { |x| [x.sourcefileorurl, x] }.flatten]
+    end
+
     private
 
     def parse_lines
