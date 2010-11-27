@@ -56,11 +56,11 @@ module Checkm
     def add path, args = {}
       line = Checkm::Entry.create path, args
 
-      Checkm::Manifest.new [@lines, line].flatten.join("\n"), args
+      Checkm::Manifest.new [@lines, line].flatten.join("\n"), @args
     end
 
     def remove path
-      Checkm::Manifest.new @lines.reject { |x| x =~ /^@?#{path}/ }.join("\n"), args
+      Checkm::Manifest.new @lines.reject { |x| x =~ /^@?#{path}/ }.join("\n"), @args
     end
 
     def to_s
